@@ -1,6 +1,8 @@
-#include <stdio.h>
+#include <sys/select.h>
 #include <sys/time.h>
+#include <sys/types.h>
 #include <unistd.h>
+#include <stdio.h>
 
 int main()
 {
@@ -8,28 +10,27 @@ int main()
 	struct timeval tv;
 	int err;
 	
-	while(1)
+
+	FD_ZERO(&rd);
+	FD_SET(0,&rd);
+	
+	tv.tv_sec = 5;
+	tv.tv_usec = 0;
+	err = select(1,&rd,NULL,NULL,&tv);
+	
+	if(err == 0) //超时
 	{
-		FD_ZERO(&rd);
-		FD_SET(stdin,&rd);
-		
-		tv.sec = 5;
-		tv.usec = 0;
-		err = select(stdin+1,&rd,NULL,NULL,&tv);
-		
-		if(err == 0) //超时
-		{
-			printf("select time out!\n");
-		}
-		else if(err == -1)  //失败
-		{
-			printf("fail to select!\n");
-		}
-		else  //成功
-		{
-			printf("data is available!\n");
-		}
+		printf("select time out!\n");
 	}
+	else if(err == -1)  //失败
+	{
+		printf("fail to select!\n");
+	}
+	else  //成功
+	{
+		printf("data is available!\n");
+	}
+
 	
 	return 0;
 }

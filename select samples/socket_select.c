@@ -5,6 +5,7 @@
 #include <sys/time.h> 
 #include <sys/ioctl.h> 
 #include <unistd.h> 
+#include <stdlib.h>
 
 int main() 
 { 
@@ -17,10 +18,10 @@ int main()
     server_sockfd = socket(AF_INET, SOCK_STREAM, 0);//建立服务器端socket 
     server_address.sin_family = AF_INET; 
     server_address.sin_addr.s_addr = htonl(INADDR_ANY); 
-    server_address.sin_port = htons(9734); 
+    server_address.sin_port = htons(8888); 
     server_len = sizeof(server_address); 
     bind(server_sockfd, (struct sockaddr *)&server_address, server_len); 
-    listen(server_sockfd, 5); 
+    listen(server_sockfd, 5); //监听队列最多容纳5个 
     FD_ZERO(&readfds); 
     FD_SET(server_sockfd, &readfds);//将服务器端socket加入到集合中
     while(1) 
@@ -29,10 +30,10 @@ int main()
         int fd; 
         int nread; 
         testfds = readfds;//将需要监视的描述符集copy到select查询队列中，select会对其修改，所以一定要分开使用变量 
-        printf("server waiting/n"); 
+        printf("server waiting\n"); 
 
         /*无限期阻塞，并测试文件描述符变动 */
-        result = select(FD_SETSIZE, &testfds, (fd_set *)0,(fd_set *)0, (struct timeval *) 0); 
+        result = select(FD_SETSIZE, &testfds, (fd_set *)0,(fd_set *)0, (struct timeval *) 0); //FD_SETSIZE：系统默认的最大文件描述符
         if(result < 1) 
         { 
             perror("server5"); 
@@ -52,9 +53,8 @@ int main()
                     client_sockfd = accept(server_sockfd, 
                     (struct sockaddr *)&client_address, &client_len); 
                     FD_SET(client_sockfd, &readfds);//将客户端socket加入到集合中
-                    printf("adding client on fd %d/n", client_sockfd); 
+                    printf("adding client on fd %d\n", client_sockfd); 
                 } 
-
                 /*客户端socket中有数据请求时*/
                 else 
                 { 
@@ -65,15 +65,14 @@ int main()
                     { 
                         close(fd); 
                         FD_CLR(fd, &readfds); //去掉关闭的fd
-                        printf("removing client on fd %d/n", fd); 
+                        printf("removing client on fd %d\n", fd); 
                     } 
-
                     /*处理客户数据请求*/
                     else 
                     { 
                         read(fd, &ch, 1); 
                         sleep(5); 
-                        printf("serving client on fd %d/n", fd); 
+                        printf("serving client on fd %d\n", fd); 
                         ch++; 
                         write(fd, &ch, 1); 
                     } 
@@ -81,36 +80,6 @@ int main()
             } 
         } 
     } 
-}
-客户端
-#include <sys/types.h> 
-#include <sys/socket.h> 
-#include <stdio.h> 
-#include <netinet/in.h> 
-#include <arpa/inet.h> 
-#include <unistd.h> 
 
-int main() 
-{ 
-    int client_sockfd; 
-    int len; 
-    struct sockaddr_in address;//服务器端网络地址结构体 
-     int result; 
-    char ch = 'A'; 
-    client_sockfd = socket(AF_INET, SOCK_STREAM, 0);//建立客户端socket 
-    address.sin_family = AF_INET; 
-    address.sin_addr.s_addr = inet_addr(“127.0.0.1”); 
-    address.sin_port = 9734; 
-    len = sizeof(address); 
-    result = connect(client_sockfd, (struct sockaddr *)&address, len); 
-    if(result == -1) 
-    { 
-         perror("oops: client2"); 
-         exit(1); 
-    } 
-    write(client_sockfd, &ch, 1); 
-    read(client_sockfd, &ch, 1); 
-    printf("char from server = %c/n", ch); 
-    close(client_sockfd); 
-    zexit(0); 
+    return 0;
 }

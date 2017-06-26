@@ -7,6 +7,7 @@
 #include <arpa/inet.h>
 #include <string.h>
 #include <fcntl.h>
+#include <stdlib.h>
 
 
 int main(int argc, char* argv[])
@@ -17,8 +18,11 @@ int main(int argc, char* argv[])
 		return -1;
 	}
 	
-	const char* ip = argv[0];
-	int port = atoi(argv[1]);
+	const char* ip = argv[1];
+	int port = atoi(argv[2]);
+
+        printf("ip: %s\n",ip);
+        printf("port: %d\n",port);
 	
 	int ret = 0;
 	struct sockaddr_in address;
@@ -28,7 +32,7 @@ int main(int argc, char* argv[])
 	address.sin_port = htons(port);
 	
 	int listenfd = socket(PF_INET,SOCK_STREAM,0);
-	if(listenfd <０)
+	if(listenfd < 0)
 	{
 		printf("Fail to create listen socket!\n");
 		return -1;
